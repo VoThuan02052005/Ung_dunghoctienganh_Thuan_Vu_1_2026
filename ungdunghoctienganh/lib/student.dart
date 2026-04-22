@@ -1,6 +1,6 @@
 class Student {
-  String id;
-  String name;
+  String studentId;
+  String fullname;
   String currentLesson;
   int completedLessons;
   double studyHours;
@@ -10,8 +10,8 @@ class Student {
   Map<String, int> skillScores;
 
   Student({
-    required this.id,
-    required this.name,
+    required this.studentId,
+    required this.fullname,
     required this.currentLesson,
     required this.completedLessons,
     required this.studyHours,
@@ -20,19 +20,6 @@ class Student {
     required this.vocabulary,
     required this.skillScores,
   });
-
-  void showInfo() {
-    print('ID: $id');
-    print('Tên học viên: $name');
-    print('Bài học hiện tại: $currentLesson');
-    print('Số bài đã hoàn thành: $completedLessons');
-    print('Tổng giờ học: $studyHours');
-    print('Premium: ${isPremium ? "Có" : "Không"}');
-    print('Chủ đề học: $topics');
-    print('Từ vựng: $vocabulary');
-    print('Điểm kỹ năng: $skillScores');
-    print('---------------------------');
-  }
 
   void updateLesson(String newLesson) {
     currentLesson = newLesson;
@@ -50,15 +37,12 @@ class Student {
   }
 
   double averageSkillScore() {
-    if (skillScores.isEmpty) {
-      return 0.0;
-    }
+    if (skillScores.isEmpty) return 0.0;
 
     int total = 0;
     for (var score in skillScores.values) {
       total += score;
     }
-
     return total / skillScores.length;
   }
 
