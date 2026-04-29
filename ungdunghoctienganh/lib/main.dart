@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'student.dart';
 import 'list_student.dart';
 
+// Generic class dùng để lưu một đối tượng có kiểu dữ liệu bất kỳ.
+// Trong bài này, T là List<Map<String, String>>.
 class GenericsClass<T> {
   T obj;
 
@@ -12,23 +14,35 @@ void main() {
   runApp(const MyApp());
 }
 
+// Widget gốc của toàn bộ ứng dụng.
+// StatelessWidget vì bản thân MyApp không thay đổi trạng thái.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // Tắt banner debug ở góc phải màn hình.
       debugShowCheckedModeBanner: false,
-      title: 'Bài tập Flutter',
+
+      title: 'Student Management App',
+
+      // Cấu hình giao diện chung cho app.
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
+
+      // Màn hình chính của ứng dụng.
       home: const HomePage(),
     );
   }
 }
 
+// HomePage dùng StatefulWidget vì có thay đổi trạng thái:
+// - đổi tab bằng BottomNavigationBar
+// - create/edit/delete student
+// - cập nhật actionMessage
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -37,23 +51,39 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Biến lưu tab hiện tại đang được chọn.
+  // 0 = Home, 1 = Generics, 2 = CRUD.
+  int currentIndex = 0;
+
+  // Đối tượng generic dùng cho Câu 2.
   late GenericsClass<List<Map<String, String>>> genericObject;
+
+  // Đối tượng quản lý danh sách học viên.
   final ListStudent listStudent = ListStudent();
 
+  // Chuỗi hiển thị trạng thái sau khi người dùng bấm Create/Edit/Delete/Read.
   String actionMessage = 'Chưa thực hiện thao tác nào';
 
   @override
   void initState() {
     super.initState();
 
-    // CÂU 2: dữ liệu đầu vào gốc
+    // =========================
+    // CÂU 2: GENERICS CLASS
+    // =========================
+    // Dữ liệu đầu vào gồm studentId và fullname.
     genericObject = GenericsClass<List<Map<String, String>>>([
       {'studentId': 's123456', 'fullname': 'Nguyen Thi B'},
       {'studentId': 's345672', 'fullname': 'Nguyen Van D'},
       {'studentId': 's923333', 'fullname': 'Tran Thi Van'},
     ]);
 
-    // CÂU 3 + 4: dùng đúng các sinh viên ở Câu 2
+    // =========================
+    // CÂU 3 + CÂU 4: STUDENT + CRUD
+    // =========================
+    // Tạo danh sách Student dựa trên đúng 3 sinh viên ở Câu 2.
+    // Ở đây bổ sung thêm bài học, số giờ học, chủ đề, từ vựng, điểm kỹ năng.
+
     listStudent.createStudent(
       Student(
         studentId: 's123456',
@@ -121,9 +151,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // =========================
+  // CRUD FUNCTIONS
+  // =========================
+
+  // CREATE: thêm học viên mới vào danh sách.
   void createNewStudent() {
     final existed = listStudent.readStudentById('s888888');
 
+    // Nếu học viên đã tồn tại thì không thêm nữa.
     if (existed != null) {
       setState(() {
         actionMessage = 'Học viên s888888 đã tồn tại';
@@ -153,11 +189,13 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
+    // setState dùng để cập nhật lại giao diện sau khi thêm dữ liệu.
     setState(() {
       actionMessage = 'Create: Đã thêm học viên s888888 - Le Van E';
     });
   }
 
+  // EDIT: chỉnh sửa thông tin học viên có mã s345672.
   void editStudent() {
     bool result = listStudent.editStudent(
       's345672',
@@ -174,6 +212,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // DELETE: xóa học viên có mã s923333.
   void deleteStudent() {
     bool result = listStudent.deleteStudent('s923333');
 
@@ -184,6 +223,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // READ: đọc toàn bộ danh sách học viên.
   void readAllStudents() {
     setState(() {
       actionMessage =
@@ -191,6 +231,11 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // =========================
+  // COMMON UI WIDGETS
+  // =========================
+
+  // Widget dùng chung để hiển thị tiêu đề từng phần.
   Widget buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -204,62 +249,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildGenericSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildSectionTitle('Câu 2 - Generics Class'),
-            const Text(
-              'Dữ liệu đầu vào:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ...genericObject.obj.map((item) {
-              return Card(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.person),
-                  ),
-                  title: Text(item['fullname'] ?? ''),
-                  subtitle: Text('Student ID: ${item['studentId'] ?? ''}'),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildActionButtons() {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        ElevatedButton(
-          onPressed: createNewStudent,
-          child: const Text('Create'),
-        ),
-        ElevatedButton(
-          onPressed: editStudent,
-          child: const Text('Edit'),
-        ),
-        ElevatedButton(
-          onPressed: deleteStudent,
-          child: const Text('Delete'),
-        ),
-        ElevatedButton(
-          onPressed: readAllStudents,
-          child: const Text('Read All'),
-        ),
-      ],
-    );
-  }
-
+  // Widget hiển thị một card thông tin học viên.
   Widget buildStudentCard(Student student) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -275,22 +265,31 @@ class _HomePageState extends State<HomePage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 8),
+
             Text('Bài học hiện tại: ${student.currentLesson}'),
             Text('Số bài hoàn thành: ${student.completedLessons}'),
             Text('Số giờ học: ${student.studyHours}'),
             Text('Premium: ${student.isPremium ? "Có" : "Không"}'),
+
             Text(
               'Điểm trung bình kỹ năng: '
               '${student.averageSkillScore().toStringAsFixed(2)}',
             ),
+
             const SizedBox(height: 8),
+
             Text('Chủ đề: ${student.topics.join(', ')}'),
+
             const SizedBox(height: 8),
+
             const Text(
               'Từ vựng:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
+            // Hiển thị danh sách từ vựng của học viên.
             ...student.vocabulary.map((item) {
               return Text('- ${item['word']} : ${item['meaning']}');
             }),
@@ -300,53 +299,213 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildCrudSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildSectionTitle('Câu 3, 4 - Student và CRUD'),
-            const Text(
-              'Danh sách bên dưới chính là các sinh viên ở Câu 2, được bổ sung thêm thông tin để thực hiện CRUD.',
+  // =========================
+  // TAB 1: HOME
+  // =========================
+
+  Widget buildHomeTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildSectionTitle('Student Management App'),
+                const Text(
+                  'Ứng dụng quản lý học viên học tiếng Anh được xây dựng bằng Flutter.',
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Ứng dụng gồm 3 màn hình chính:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('- Home: giới thiệu tổng quan ứng dụng.'),
+                const Text('- Generics: hiển thị dữ liệu đầu vào của Câu 2.'),
+                const Text('- CRUD: thêm, xem, sửa, xóa học viên.'),
+              ],
             ),
-            const SizedBox(height: 16),
-            buildActionButtons(),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'Trạng thái: $actionMessage',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ...listStudent.readAllStudents().map(buildStudentCard).toList(),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
+  // =========================
+  // TAB 2: GENERICS
+  // =========================
+
+  Widget buildGenericsTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildSectionTitle('Câu 2 - Generics Class'),
+
+                const Text(
+                  'Phần này sử dụng GenericsClass<T> để lưu danh sách học viên '
+                  'dưới dạng List<Map<String, String>>.',
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Dữ liệu đầu vào:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Duyệt danh sách genericObject.obj để hiển thị từng học viên.
+                ...genericObject.obj.map((item) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.person),
+                      ),
+                      title: Text(item['fullname'] ?? ''),
+                      subtitle: Text('Student ID: ${item['studentId'] ?? ''}'),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =========================
+  // TAB 3: CRUD
+  // =========================
+
+  Widget buildCrudTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildSectionTitle('Câu 3, 4 - Student và CRUD'),
+
+                const Text(
+                  'Danh sách bên dưới chính là các sinh viên ở Câu 2, '
+                  'được bổ sung thêm thông tin để thực hiện CRUD.',
+                ),
+
+                const SizedBox(height: 16),
+
+                // Các nút thao tác CRUD.
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    ElevatedButton(
+                      onPressed: createNewStudent,
+                      child: const Text('Create'),
+                    ),
+                    ElevatedButton(
+                      onPressed: readAllStudents,
+                      child: const Text('Read All'),
+                    ),
+                    ElevatedButton(
+                      onPressed: editStudent,
+                      child: const Text('Edit'),
+                    ),
+                    ElevatedButton(
+                      onPressed: deleteStudent,
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Khung hiển thị trạng thái thao tác.
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Trạng thái: $actionMessage',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Hiển thị toàn bộ danh sách học viên.
+                ...listStudent.readAllStudents().map(buildStudentCard),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =========================
+  // MAIN BUILD
+  // =========================
+
   @override
   Widget build(BuildContext context) {
+    // Danh sách các màn hình tương ứng với BottomNavigationBar.
+    final List<Widget> tabs = [
+      buildHomeTab(),
+      buildGenericsTab(),
+      buildCrudTab(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bài tập Câu 2, 3, 4'),
+        title: const Text('Student Management App'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          buildGenericSection(),
-          const SizedBox(height: 16),
-          buildCrudSection(),
+
+      // Hiển thị màn hình tương ứng với tab đang chọn.
+      body: tabs[currentIndex],
+
+      // Thanh điều hướng dưới cùng.
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: currentIndex,
+
+        // Khi bấm vào item, cập nhật currentIndex và vẽ lại giao diện.
+        onTap: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.code),
+            label: 'Generics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'CRUD',
+          ),
         ],
       ),
     );
