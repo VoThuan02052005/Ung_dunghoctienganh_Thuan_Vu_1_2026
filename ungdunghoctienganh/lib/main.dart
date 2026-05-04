@@ -15,50 +15,45 @@ void main() {
 }
 
 // Widget gốc của toàn bộ ứng dụng.
-// StatelessWidget vì bản thân MyApp không thay đổi trạng thái.
+// StatelessWidget vì MyApp chỉ cấu hình theme và màn hình đầu tiên.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Tắt banner debug ở góc phải màn hình.
       debugShowCheckedModeBanner: false,
-
-      title: 'Student Management App',
-
-      // Cấu hình giao diện chung cho app.
+      title: 'English Learning App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFEFFAF1),
       ),
-
-      // Màn hình chính của ứng dụng.
-      home: const HomePage(),
+      home: const MainLayout(),
     );
   }
 }
 
-// HomePage dùng StatefulWidget vì có thay đổi trạng thái:
-// - đổi tab bằng BottomNavigationBar
-// - create/edit/delete student
-// - cập nhật actionMessage
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+// MainLayout dùng StatefulWidget vì có thay đổi trạng thái:
+// - đổi màn hình bằng NavigationBar
+// - create/edit/delete/read student
+// - cập nhật actionMessage sau mỗi thao tác CRUD
+class MainLayout extends StatefulWidget {
+  const MainLayout({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _HomePageState extends State<HomePage> {
-  // Biến lưu tab hiện tại đang được chọn.
-  // 0 = Home, 1 = Generics, 2 = CRUD.
+class _MainLayoutState extends State<MainLayout> {
+  // Biến lưu màn hình hiện tại đang được chọn.
+  // 0 = Home, 1 = Content, 2 = About.
   int currentIndex = 0;
 
-  // Đối tượng generic dùng cho Câu 2.
+  // Đối tượng generic dùng để lưu dữ liệu dạng List<Map<String, String>>.
   late GenericsClass<List<Map<String, String>>> genericObject;
 
-  // Đối tượng quản lý danh sách học viên.
+  // Đối tượng quản lý danh sách học viên và các hàm CRUD.
   final ListStudent listStudent = ListStudent();
 
   // Chuỗi hiển thị trạng thái sau khi người dùng bấm Create/Edit/Delete/Read.
@@ -81,9 +76,9 @@ class _HomePageState extends State<HomePage> {
     // =========================
     // CÂU 3 + CÂU 4: STUDENT + CRUD
     // =========================
-    // Tạo danh sách Student dựa trên đúng 3 sinh viên ở Câu 2.
-    // Ở đây bổ sung thêm bài học, số giờ học, chủ đề, từ vựng, điểm kỹ năng.
-
+    // Tạo danh sách Student dựa trên đúng 3 sinh viên ở phần Generics.
+    // Mỗi học viên được bổ sung thêm bài học, số giờ học, chủ đề, từ vựng,
+    // điểm kỹ năng để phù hợp với chủ đề app học tiếng Anh.
     listStudent.createStudent(
       Student(
         studentId: 's123456',
@@ -162,7 +157,7 @@ class _HomePageState extends State<HomePage> {
     // Nếu học viên đã tồn tại thì không thêm nữa.
     if (existed != null) {
       setState(() {
-        actionMessage = 'Học viên s888888 đã tồn tại';
+        actionMessage = 'Create: Học viên s888888 đã tồn tại';
       });
       return;
     }
@@ -189,7 +184,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    // setState dùng để cập nhật lại giao diện sau khi thêm dữ liệu.
     setState(() {
       actionMessage = 'Create: Đã thêm học viên s888888 - Le Van E';
     });
@@ -197,7 +191,7 @@ class _HomePageState extends State<HomePage> {
 
   // EDIT: chỉnh sửa thông tin học viên có mã s345672.
   void editStudent() {
-    bool result = listStudent.editStudent(
+    final result = listStudent.editStudent(
       's345672',
       currentLesson: 'Advanced Travel English',
       completedLessons: 10,
@@ -214,7 +208,7 @@ class _HomePageState extends State<HomePage> {
 
   // DELETE: xóa học viên có mã s923333.
   void deleteStudent() {
-    bool result = listStudent.deleteStudent('s923333');
+    final result = listStudent.deleteStudent('s923333');
 
     setState(() {
       actionMessage = result
@@ -227,7 +221,7 @@ class _HomePageState extends State<HomePage> {
   void readAllStudents() {
     setState(() {
       actionMessage =
-          'Read: Hiển thị toàn bộ danh sách (${listStudent.students.length} học viên)';
+          'Read: Đang hiển thị ${listStudent.students.length} học viên';
     });
   }
 
@@ -235,15 +229,150 @@ class _HomePageState extends State<HomePage> {
   // COMMON UI WIDGETS
   // =========================
 
-  // Widget dùng chung để hiển thị tiêu đề từng phần.
-  Widget buildSectionTitle(String title) {
+  // Header/Banner dùng chung cho cả 3 màn hình.
+  Widget headerBanner({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFC9F4D4),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.green.shade700, width: 1.2),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.white,
+            child: Icon(icon, color: Colors.green.shade800, size: 30),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Card dùng chung để giữ layout thống nhất: tiêu đề, mô tả, nội dung.
+  Widget appCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(top: 16),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Colors.green.shade800),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 14),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Dòng thông tin nhỏ dùng ở màn About.
+  Widget infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 125,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  // Ô thống kê nhỏ ở màn Home.
+  Widget statBox(String value, String label, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.shade100),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.green.shade800),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
         ),
       ),
     );
@@ -251,82 +380,124 @@ class _HomePageState extends State<HomePage> {
 
   // Widget hiển thị một card thông tin học viên.
   Widget buildStudentCard(Student student) {
-    return Card(
+    return Container(
+      width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${student.fullname} (${student.studentId})',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.green.shade100,
+                child: Icon(Icons.person, color: Colors.green.shade800),
               ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text('Bài học hiện tại: ${student.currentLesson}'),
-            Text('Số bài hoàn thành: ${student.completedLessons}'),
-            Text('Số giờ học: ${student.studyHours}'),
-            Text('Premium: ${student.isPremium ? "Có" : "Không"}'),
-
-            Text(
-              'Điểm trung bình kỹ năng: '
-              '${student.averageSkillScore().toStringAsFixed(2)}',
-            ),
-
-            const SizedBox(height: 8),
-
-            Text('Chủ đề: ${student.topics.join(', ')}'),
-
-            const SizedBox(height: 8),
-
-            const Text(
-              'Từ vựng:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-
-            // Hiển thị danh sách từ vựng của học viên.
-            ...student.vocabulary.map((item) {
-              return Text('- ${item['word']} : ${item['meaning']}');
-            }),
-          ],
-        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      student.fullname,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text('Student ID: ${student.studentId}'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Bài học hiện tại: ${student.currentLesson}'),
+          Text('Số bài hoàn thành: ${student.completedLessons}'),
+          Text('Số giờ học: ${student.studyHours}'),
+          Text('Premium: ${student.isPremium ? "Có" : "Không"}'),
+          Text(
+            'Điểm trung bình kỹ năng: '
+            '${student.averageSkillScore().toStringAsFixed(2)}',
+          ),
+          const SizedBox(height: 8),
+          Text('Chủ đề: ${student.topics.join(', ')}'),
+          const SizedBox(height: 8),
+          const Text(
+            'Từ vựng:',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          ...student.vocabulary.map((item) {
+            return Text('- ${item['word']} : ${item['meaning']}');
+          }),
+        ],
       ),
     );
   }
 
   // =========================
-  // TAB 1: HOME
+  // SCREEN 1: HOME
   // =========================
 
-  Widget buildHomeTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
+  Widget buildHomePage() {
+    final totalStudents = listStudent.students.length;
+    final premiumStudents = listStudent.students
+        .where((student) => student.isPremium)
+        .length;
+    final totalLessons = listStudent.students.fold<int>(
+      0,
+      (sum, student) => sum + student.completedLessons,
+    );
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              headerBanner(
+                title: 'Home',
+                subtitle: 'English Learning App - Quản lý học viên học tiếng Anh',
+                icon: Icons.home,
+              ),
+              appCard(
+                title: 'Content',
+                subtitle: 'Thống kê nhanh về học viên và quá trình học tập.',
+                icon: Icons.analytics_outlined,
+                children: [
+                  Row(
+                    children: [
+                      statBox('$totalStudents', 'Học viên', Icons.groups),
+                      statBox('$premiumStudents', 'Premium', Icons.workspace_premium),
+                      statBox('$totalLessons', 'Bài học', Icons.menu_book),
+                    ],
+                  ),
+                ],
+              ),
+            ]),
+          ),
+        ),
+        SliverFillRemaining(
+          hasScrollBody: false,
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildSectionTitle('Student Management App'),
-                const Text(
-                  'Ứng dụng quản lý học viên học tiếng Anh được xây dựng bằng Flutter.',
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Ứng dụng gồm 3 màn hình chính:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text('- Home: giới thiệu tổng quan ứng dụng.'),
-                const Text('- Generics: hiển thị dữ liệu đầu vào của Câu 2.'),
-                const Text('- CRUD: thêm, xem, sửa, xóa học viên.'),
-              ],
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: appCard(
+                title: 'Footer / Card',
+                subtitle: 'Danh sách chức năng chính của ứng dụng.',
+                icon: Icons.check_circle_outline,
+                children: const [
+                  Text('• Home: giới thiệu ứng dụng và thống kê nhanh.'),
+                  Text('• Content: hiển thị Generics Data và CRUD học viên.'),
+                  Text('• About: giới thiệu app, nhóm và cấu trúc layout.'),
+                ],
+              ),
             ),
           ),
         ),
@@ -335,49 +506,103 @@ class _HomePageState extends State<HomePage> {
   }
 
   // =========================
-  // TAB 2: GENERICS
+  // SCREEN 2: CONTENT
   // =========================
 
-  Widget buildGenericsTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildSectionTitle('Câu 2 - Generics Class'),
-
-                const Text(
-                  'Phần này sử dụng GenericsClass<T> để lưu danh sách học viên '
-                  'dưới dạng List<Map<String, String>>.',
-                ),
-
-                const SizedBox(height: 16),
-
-                const Text(
-                  'Dữ liệu đầu vào:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Duyệt danh sách genericObject.obj để hiển thị từng học viên.
-                ...genericObject.obj.map((item) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        child: Icon(Icons.person),
+  Widget buildContentPage() {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              headerBanner(
+                title: 'Content',
+                subtitle: 'Dữ liệu List/Map, Generics và CRUD Student.',
+                icon: Icons.article,
+              ),
+              appCard(
+                title: 'Generics Data',
+                subtitle: 'Sử dụng GenericsClass<T> với List<Map<String, String>>.',
+                icon: Icons.data_object,
+                children: [
+                  ...genericObject.obj.map((item) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      title: Text(item['fullname'] ?? ''),
-                      subtitle: Text('Student ID: ${item['studentId'] ?? ''}'),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.green.shade100,
+                          child: Icon(Icons.person, color: Colors.green.shade800),
+                        ),
+                        title: Text(item['fullname'] ?? ''),
+                        subtitle: Text('Student ID: ${item['studentId'] ?? ''}'),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ]),
+          ),
+        ),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: appCard(
+                title: 'CRUD & Students List',
+                subtitle: 'Các nút thao tác và danh sách học viên dạng Card.',
+                icon: Icons.people_alt_outlined,
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: createNewStudent,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Create'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: readAllStudents,
+                        icon: const Icon(Icons.visibility),
+                        label: const Text('Read'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: editStudent,
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Edit'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: deleteStudent,
+                        icon: const Icon(Icons.delete_outline),
+                        label: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.green.shade100),
                     ),
-                  );
-                }),
-              ],
+                    child: Text(
+                      'Trạng thái: $actionMessage',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...listStudent.readAllStudents().map(buildStudentCard),
+                ],
+              ),
             ),
           ),
         ),
@@ -386,73 +611,64 @@ class _HomePageState extends State<HomePage> {
   }
 
   // =========================
-  // TAB 3: CRUD
+  // SCREEN 3: ABOUT
   // =========================
 
-  Widget buildCrudTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
+  Widget buildAboutPage() {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              headerBanner(
+                title: 'About',
+                subtitle: 'Thông tin ứng dụng, công nghệ và thiết kế mockup.',
+                icon: Icons.info,
+              ),
+              appCard(
+                title: 'App Info',
+                subtitle: 'Thông tin tổng quan của ứng dụng.',
+                icon: Icons.app_shortcut,
+                children: [
+                  infoRow('Tên ứng dụng', 'English Learning App'),
+                  infoRow('Chủ đề', 'Quản lý học viên học tiếng Anh'),
+                  infoRow('Công nghệ', 'Flutter, Dart, Material Design 3'),
+                  infoRow('Màu chủ đạo', 'Xanh lá nhạt'),
+                  infoRow('Font chữ', 'Font mặc định của Flutter/Material'),
+                ],
+              ),
+              appCard(
+                title: 'Mockup Layout',
+                subtitle: 'Cấu trúc 4 phần của mỗi màn hình trong app.',
+                icon: Icons.dashboard_customize,
+                children: const [
+                  Text('1. Header / Banner: tên màn hình và mô tả ngắn.'),
+                  Text('2. Content: dữ liệu, danh sách và chức năng chính.'),
+                  Text('3. Footer / Card: thông tin bổ sung hoặc chức năng phụ.'),
+                  Text('4. Navigation Bar: chuyển giữa Home, Content, About.'),
+                ],
+              ),
+            ]),
+          ),
+        ),
+        SliverFillRemaining(
+          hasScrollBody: false,
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildSectionTitle('Câu 3, 4 - Student và CRUD'),
-
-                const Text(
-                  'Danh sách bên dưới chính là các sinh viên ở Câu 2, '
-                  'được bổ sung thêm thông tin để thực hiện CRUD.',
-                ),
-
-                const SizedBox(height: 16),
-
-                // Các nút thao tác CRUD.
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    ElevatedButton(
-                      onPressed: createNewStudent,
-                      child: const Text('Create'),
-                    ),
-                    ElevatedButton(
-                      onPressed: readAllStudents,
-                      child: const Text('Read All'),
-                    ),
-                    ElevatedButton(
-                      onPressed: editStudent,
-                      child: const Text('Edit'),
-                    ),
-                    ElevatedButton(
-                      onPressed: deleteStudent,
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Khung hiển thị trạng thái thao tác.
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Trạng thái: $actionMessage',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Hiển thị toàn bộ danh sách học viên.
-                ...listStudent.readAllStudents().map(buildStudentCard),
-              ],
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: appCard(
+                title: 'Design Consistency',
+                subtitle: 'Sự thống nhất về layout, màu sắc, font chữ và chức năng.',
+                icon: Icons.palette_outlined,
+                children: const [
+                  Text('• Các màn hình dùng chung Header/Banner và Card.'),
+                  Text('• Màu sắc thống nhất theo tông xanh lá nhạt.'),
+                  Text('• Navigation Bar luôn nằm ở cuối màn hình.'),
+                  Text('• Nội dung xoay quanh chủ đề học tiếng Anh.'),
+                ],
+              ),
             ),
           ),
         ),
@@ -466,45 +682,46 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Danh sách các màn hình tương ứng với BottomNavigationBar.
-    final List<Widget> tabs = [
-      buildHomeTab(),
-      buildGenericsTab(),
-      buildCrudTab(),
+    // Danh sách các màn hình tương ứng với NavigationBar.
+    final List<Widget> pages = [
+      buildHomePage(),
+      buildContentPage(),
+      buildAboutPage(),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Management App'),
+        title: const Text('English Learning App'),
+        centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
 
       // Hiển thị màn hình tương ứng với tab đang chọn.
-      body: tabs[currentIndex],
+      body: pages[currentIndex],
 
-      // Thanh điều hướng dưới cùng.
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-
-        // Khi bấm vào item, cập nhật currentIndex và vẽ lại giao diện.
-        onTap: (index) {
+      // Navigation Bar ở cuối cùng mỗi trang.
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: (index) {
           setState(() {
             currentIndex = index;
           });
         },
-
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.code),
-            label: 'Generics',
+          NavigationDestination(
+            icon: Icon(Icons.article_outlined),
+            selectedIcon: Icon(Icons.article),
+            label: 'Content',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'CRUD',
+          NavigationDestination(
+            icon: Icon(Icons.info_outline),
+            selectedIcon: Icon(Icons.info),
+            label: 'About',
           ),
         ],
       ),
