@@ -1,3 +1,88 @@
+# English Learning App - Bài kiểm tra giữa kỳ
+
+Ứng dụng Flutter theo đề tài **app học tiếng Anh**. Nhóm có **2 sinh viên**, nên nhóm hoàn thiện **2/3 màn hình yêu cầu** theo phân công: `Home` và `Content`.
+
+Lưu ý: các công việc cũ vẫn được giữ lại trong project. Vì vậy app vẫn có tab `About` để lưu phần giới thiệu/cấu trúc cũ, còn phần nộp chính của nhóm là `Home` và `Content`.
+
+Sinh viên 1: Nguyễn Văn Vũ 
+Sinh viên 2: Võ Hữu Thuận
+
+## Câu 1 - Công việc nhóm
+
+- Cập nhật nội dung bài kiểm tra giữa kỳ lên `README.md`.
+- Commit/push source code lên Github nhóm.
+- Thảo luận chia screen để phát triển theo đề:
+  - Sinh viên 1: màn hình `Home`.
+  - Sinh viên 2: màn hình `Content`.
+
+## Câu 2 - Màn hình cá nhân
+
+| Màn hình | Layout theo mẫu | Nội dung đã đổi theo đề tài |
+| --- | --- | --- |
+| Home | Mẫu header + form + footer | Giới thiệu English Learning App, form đăng ký học, tài nguyên học tiếng Anh |
+| Content | Mẫu danh sách + summary giống trang Basket | Lộ trình học, bài học, giờ học, tiến độ, CRUD học viên |
+
+Link Figma tham khảo:
+
+- Home: https://www.figma.com/proto/oZ6y2zCSyLZJXvDxA359LG/FREE-Mobile-App-Mockups--Community-?node-id=202-2948&t=NkwlUcw32mPBr6YM-1
+- Content: https://www.figma.com/proto/fbjspFedt90T1p34Ty2xPI/Figma-basics?node-id=4368-321123
+
+## Chức năng chính
+
+- Hiển thị dữ liệu học viên bằng `List`, `Map`, `List<Map<String, String>>`.
+- Sử dụng `GenericsClass<T>` để lưu dữ liệu học viên dạng generic.
+- Xây dựng class `Student` để biểu diễn học viên.
+- Xây dựng class `ListStudent` để quản lý danh sách học viên.
+- Có thao tác CRUD: `Create`, `Read`, `Edit`, `Delete`.
+- Có `NavigationBar` để chuyển giữa `Home`, `Content` và `About`.
+
+## Cấu trúc code
+
+```text
+lib/
+├── main.dart          # App chính, dữ liệu demo, NavigationBar
+├── screens/
+│   ├── home_page.dart     # Màn hình Home - phần để sinh viên 1 commit
+│   ├── content_page.dart  # Màn hình Content - phần để sinh viên 2 commit
+│   └── about_page.dart    # Màn hình About cũ được giữ lại
+├── student.dart       # Class Student
+└── list_student.dart  # Class ListStudent và các hàm CRUD
+```
+
+## Code phần Page/Screen
+
+File chính: `lib/main.dart`
+
+- `Widget buildHomePage()`: màn hình Home theo layout header + form + footer.
+- `Widget buildContentPage()`: màn hình Content theo layout danh sách bài học + study summary.
+- `Widget buildAboutPage()`: màn hình About cũ được giữ lại để không mất công việc đã làm.
+- `Widget contactForm()`: form đăng ký học tiếng Anh.
+- `Widget lessonCard(...)`: card bài học tương ứng từng học viên.
+- `Widget studySummary()`: thống kê tiến độ học và nút CRUD.
+
+## Gợi ý chia commit cho 2 sinh viên
+
+Để cả 2 sinh viên đều có lịch sử commit riêng, không nên để một người commit toàn bộ. Sau khi pull code mới nhất:
+
+1. Sinh viên phụ trách `Home` commit file:
+
+```bash
+git add lib/screens/home_page.dart
+git commit -m "Hoan thien man hinh Home"
+git push
+```
+
+2. Sinh viên phụ trách `Content` commit file:
+
+```bash
+git pull
+git add lib/screens/content_page.dart
+git commit -m "Hoan thien man hinh Content"
+git push
+```
+
+Các file chung như `main.dart`, `README.md`, `student.dart`, `list_student.dart` có thể commit bởi nhóm hoặc người được phân công, nhưng mỗi sinh viên cần có ít nhất một commit bằng tài khoản Github của mình.
+------------------------------------------------------------------------------------------
 # English Learning App
 
 Ứng dụng Flutter phục vụ bài tập nhóm: thiết kế layout thống nhất cho 3 màn hình **Home**, **Content**, **About** và xây dựng **Navigation Bar** ở cuối mỗi trang.
