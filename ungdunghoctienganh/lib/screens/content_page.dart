@@ -35,6 +35,8 @@ class ContentPage extends StatelessWidget {
     required this.onRead,
     required this.onEdit,
     required this.onDelete,
+    required this.onEditStudent,
+    required this.onDeleteStudent,
   });
 
   static const Color brandGreen = Color(0xFF3F6F24);
@@ -43,10 +45,12 @@ class ContentPage extends StatelessWidget {
 
   final List<Student> students;
   final String actionMessage;
-  final VoidCallback onCreate;
+  final Function(BuildContext) onCreate;
   final VoidCallback onRead;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final Function(BuildContext) onEdit;
+  final Function(BuildContext) onDelete;
+  final Function(BuildContext, Student) onEditStudent;
+  final Function(BuildContext, Student) onDeleteStudent;
 
   List<LessonCardData> get lessonCards {
     final icons = [
@@ -136,17 +140,17 @@ class ContentPage extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: lessonList()),
+                          Expanded(child: lessonList(context)),
                           const SizedBox(width: 32),
-                          SizedBox(width: 370, child: studySummary()),
+                          SizedBox(width: 370, child: studySummary(context)),
                         ],
                       )
                     else
                       Column(
                         children: [
-                          lessonList(),
+                          lessonList(context),
                           const SizedBox(height: 24),
-                          studySummary(),
+                          studySummary(context),
                         ],
                       ),
                   ],
@@ -200,27 +204,32 @@ class ContentPage extends StatelessWidget {
     );
   }
 
-  Widget lessonList() {
+  Widget lessonList(BuildContext context) {
+    final cards = lessonCards;
     return Column(
-      children: lessonCards.map(lessonCard).toList(),
+      children: List.generate(students.length, (index) {
+        return lessonCard(students[index], cards[index], context);
+      }),
     );
   }
 
-  Widget lessonCard(LessonCardData lesson) {
+  Widget lessonCard(Student student, LessonCardData lesson, BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
 
-        return Container(
-          width: double.infinity,
+        return Card(
+          elevation: 0,
           margin: const EdgeInsets.only(bottom: 28),
-          decoration: BoxDecoration(
-            color: softSurface,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
+            side: const BorderSide(color: Color(0xFFE0E0E0), width: 1.5),
           ),
           clipBehavior: Clip.antiAlias,
-          child: compact
+          color: softSurface,
+          child: InkWell(
+            onTap: () => _showStudentDetailDialog(context, student),
+            child: compact
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -248,6 +257,7 @@ class ContentPage extends StatelessWidget {
                     ],
                   ),
                 ),
+          ),
         );
       },
     );
@@ -352,7 +362,7 @@ class ContentPage extends StatelessWidget {
     );
   }
 
-  Widget studySummary() {
+  Widget studySummary(BuildContext context) {
     final totalHours = students.fold<double>(
       0,
       (sum, student) => sum + student.studyHours,
@@ -433,10 +443,10 @@ class ContentPage extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              smallAction('Create', Icons.add, onCreate),
+              smallAction('Create', Icons.add, () => onCreate(context)),
               smallAction('Read', Icons.visibility_outlined, onRead),
-              smallAction('Edit', Icons.edit_outlined, onEdit),
-              smallAction('Delete', Icons.delete_outline, onDelete),
+              smallAction('Edit', Icons.edit_outlined, () => onEdit(context)),
+              smallAction('Delete', Icons.delete_outline, () => onDelete(context)),
             ],
           ),
           const SizedBox(height: 14),
@@ -551,6 +561,259 @@ class ContentPage extends StatelessWidget {
         'Lessons (${lessonCards.length})',
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
       ),
+    );
+  }
+
+  void _showStudentDetailDialog(BuildContext context, Student student) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final revealedVocab = <int>{};
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            width: 500,
+            color: Colors.white,
+            child: StatefulBuilder(
+              builder: (context, setDialogState) {
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        color: brandGreen,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
+                              child: const Icon(Icons.person, color: Colors.white, size: 36),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    student.fullname,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'ID: ${student.studentId}',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.85),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (student.isPremium)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'PRO',
+                                  style: TextStyle(
+                                    color: Colors.amber[800],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('CURRENT LESSON', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                                    const SizedBox(height: 4),
+                                    Text(student.currentLesson, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ink)),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const Text('STUDY HOURS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                                    const SizedBox(height: 4),
+                                    Text('${student.studyHours.toStringAsFixed(1)} hrs', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: brandGreen)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 32),
+                            const Text('TOPICS COVERED', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: student.topics.map((t) => Chip(
+                                label: Text(t),
+                                labelStyle: const TextStyle(fontSize: 13, color: brandGreen),
+                                backgroundColor: const Color(0xFFF0F5EC),
+                                side: BorderSide.none,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              )).toList(),
+                            ),
+                            const Divider(height: 32),
+                            const Text('VOCABULARY (Tap to flip/reveal meaning)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            const SizedBox(height: 12),
+                            student.vocabulary.isEmpty
+                              ? const Text('No vocabulary words added yet.', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey))
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: student.vocabulary.length,
+                                  itemBuilder: (context, idx) {
+                                    final item = student.vocabulary[idx];
+                                    final word = item['word'] ?? '';
+                                    final meaning = item['meaning'] ?? '';
+                                    final isRevealed = revealedVocab.contains(idx);
+                                    return Card(
+                                      elevation: 0,
+                                      color: const Color(0xFFF9F9FB),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        side: const BorderSide(color: Color(0xFFEEEEEE)),
+                                      ),
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () {
+                                          setDialogState(() {
+                                            if (isRevealed) {
+                                              revealedVocab.remove(idx);
+                                            } else {
+                                              revealedVocab.add(idx);
+                                            }
+                                          });
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(word, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ink)),
+                                              Row(
+                                                children: [
+                                                  AnimatedSwitcher(
+                                                    duration: const Duration(milliseconds: 200),
+                                                    child: isRevealed
+                                                      ? Text(
+                                                          meaning,
+                                                          key: ValueKey('mean_$idx'),
+                                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: brandGreen),
+                                                        )
+                                                      : Text(
+                                                          'Tap to show',
+                                                          key: ValueKey('tap_$idx'),
+                                                          style: const TextStyle(fontSize: 14, color: Colors.grey, fontStyle: FontStyle.italic),
+                                                        ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Icon(
+                                                    isRevealed ? Icons.visibility : Icons.visibility_off_outlined,
+                                                    size: 18,
+                                                    color: isRevealed ? brandGreen : Colors.grey,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                            const Divider(height: 32),
+                            const Text('SKILL SCORES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            const SizedBox(height: 12),
+                            ...student.skillScores.entries.map((entry) {
+                              final skill = entry.key;
+                              final score = entry.value;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  children: [
+                                    SizedBox(width: 80, child: Text(skill, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: ink))),
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: score / 10.0,
+                                          minHeight: 8,
+                                          backgroundColor: const Color(0xFFEEEEEE),
+                                          color: brandGreen,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text('$score/10', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: ink)),
+                                  ],
+                                ),
+                              );
+                            }),
+                            const Divider(height: 32),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    onEditStudent(context, student);
+                                  },
+                                  icon: const Icon(Icons.edit, size: 18, color: brandGreen),
+                                  label: const Text('Edit', style: TextStyle(color: brandGreen)),
+                                ),
+                                const SizedBox(width: 12),
+                                TextButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    onDeleteStudent(context, student);
+                                  },
+                                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                                  label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                                const Spacer(),
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Color(0xFFCCCCCC)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Close', style: TextStyle(color: ink)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }
