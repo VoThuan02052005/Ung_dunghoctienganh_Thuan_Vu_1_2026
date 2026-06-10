@@ -1,0 +1,84 @@
+# =========================================================================
+# 15-Year Mobile Architect Professional Flutter .gitignore
+# =========================================================================
+
+# ── Academic Reports & Documents (Excluded as requested) ──
+/LaTex Template_Bao cao/
+*.pdf
+*.aux
+*.toc
+*.lof
+*.lot
+*.out
+*.log
+*.thm
+
+# ── Flutter & Dart ──
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# ── Android Specific ──
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/local.properties
+/android/key.properties
+*.keystore
+*.jks
+*.p12
+*.key
+/android/.gradle/
+.gradle/
+captures/
+
+# ── iOS Specific ──
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.[mh]
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.xcworkspace
+!default.xcworkspace
+*.xsconfig
+*.xcuserstate
+project.xcworkspace/
+/ios/Pods/
+/ios/.symlinks/
+
+# ── Web Specific ──
+/web/flutter_service_worker.js
+
+# ── IDEs & Editors ──
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# ── Operating System Files ──
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ── Logs & Temporary Files ──
+*.log
+*.temp
+*.tmp
